@@ -49,20 +49,12 @@
 
     <!-- GAME -->
     <section id="view-game" class="view">
-      <div id="player-strip" class="player-strip"></div>
-      <div id="spectator-table" class="spectator-table"></div>
-
-      <div class="bid-readout">
-        <span class="hint">Current bid</span>
-        <div id="current-bid-text">No bid yet</div>
-      </div>
+      <div id="game-table" class="game-table"></div>
 
       <div class="your-dice">
         <span class="hint">Your dice</span>
         <div id="your-dice" class="dice-row"></div>
       </div>
-
-      <div id="turn-banner" class="turn-banner" hidden></div>
 
       <div id="bid-controls" class="bid-controls" hidden>
         <label>
@@ -94,16 +86,6 @@
       <button id="play-again-btn" class="primary">Reload &amp; play again</button>
     </section>
   </main>
-
-  <!-- REVEAL OVERLAY -->
-  <div id="reveal-overlay" class="overlay" hidden>
-    <div class="overlay-card">
-      <h3 id="reveal-title"></h3>
-      <div id="reveal-dice" class="reveal-dice"></div>
-      <p id="reveal-detail"></p>
-      <button id="reveal-continue-btn" class="primary">Continue</button>
-    </div>
-  </div>
 
   <script src="client.js"></script>
 </body>

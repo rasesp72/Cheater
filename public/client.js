@@ -13,6 +13,9 @@ const state = {
   currentPlayerId: null,
   currentBid: null, // {quantity, face, playerId}
   yourDice: [],
+  revealing: false,
+  lastReveal: null, // the challenge_result payload, shown at table center until dismissed
+  pendingGameOver: null, // queued game_over payload, applied once a pending reveal is dismissed
 };
 
 function setPhase(phase) {
@@ -104,16 +107,15 @@ function turnText() {
     : `Waiting on ${name} to open the round.`;
 }
 
-function renderSpectatorTable() {
-  if (!state.isSpectator) return;
-  els.spectatorTable.innerHTML = '';
+function orderSeatsAroundYou() {
+  const players = state.players;
+  if (state.isSpectator || !state.playerId) return players;
+  const idx = players.findIndex((p) => p.id === state.playerId);
+  if (idx === -1) return players;
+  return [...players.slice(idx), ...players.slice(0, idx)];
+}
 
-  const surface = document.createElement('div');
-  surface.className = 'table-surface';
-
-  const center = document.createElement('div');
-  center.className = 'table-center';
-
+function renderBidCenter(center) {
   const bidLabel = document.createElement('div');
   bidLabel.className = 'hint';
   bidLabel.textContent = 'Current bid';
@@ -128,64 +130,112 @@ function renderSpectatorTable() {
   center.appendChild(bidValue);
 
   if (state.phase === 'playing') {
+    const isYourTurn = !state.isSpectator && state.currentPlayerId === state.playerId;
     const turnInfo = document.createElement('div');
     turnInfo.className = 'table-turn-text';
-    turnInfo.textContent = turnText();
+    if (isYourTurn) turnInfo.classList.add('your-turn');
+    turnInfo.textContent = isYourTurn ? "It's your turn!" : turnText();
     center.appendChild(turnInfo);
+  }
+}
+
+function renderRevealCenter(center) {
+  const payload = state.lastReveal;
+  const bidder = state.players.find((p) => p.id === payload.bidderId);
+  const challenger = state.players.find((p) => p.id === payload.challengerId);
+  const bidText = `${payload.bid.quantity} × ${DIE_FACES[payload.bid.face]}`;
+
+  const title = document.createElement('div');
+  title.className = 'table-reveal-title';
+  title.textContent = payload.challengerWasRight
+    ? `${bidder ? bidder.name : '?'} was bluffing!`
+    : `${bidder ? bidder.name : '?'} told the truth!`;
+
+  const discardedNames = payload.discardedPlayerIds
+    .map((id) => (state.players.find((p) => p.id === id) || {}).name || id)
+    .join(', ');
+
+  const detail = document.createElement('div');
+  detail.className = 'table-reveal-detail';
+  detail.textContent =
+    `Claimed ${bidText}; actual count was ${payload.actualCount}. ` +
+    `${challenger ? challenger.name : '?'} ${payload.challengerWasRight ? 'was right' : 'was wrong'} to challenge. ` +
+    `${discardedNames} discard${payload.discardedPlayerIds.length === 1 ? 's' : ''} a die.`;
+
+  const continueBtn = document.createElement('button');
+  continueBtn.className = 'primary table-continue-btn';
+  continueBtn.textContent = 'Continue';
+  continueBtn.addEventListener('click', dismissReveal);
+
+  center.appendChild(title);
+  center.appendChild(detail);
+  center.appendChild(continueBtn);
+}
+
+function dismissReveal() {
+  state.revealing = false;
+  state.lastReveal = null;
+  if (state.pendingGameOver) {
+    applyGameOver(state.pendingGameOver);
+    state.pendingGameOver = null;
+  } else {
+    renderTurnAndControls();
+  }
+}
+
+function renderGameTable() {
+  els.gameTable.innerHTML = '';
+
+  const surface = document.createElement('div');
+  surface.className = 'table-surface';
+  const center = document.createElement('div');
+  center.className = 'table-center';
+
+  if (state.revealing && state.lastReveal) {
+    renderRevealCenter(center);
+  } else {
+    renderBidCenter(center);
   }
 
   surface.appendChild(center);
-  els.spectatorTable.appendChild(surface);
+  els.gameTable.appendChild(surface);
 
-  const n = state.players.length;
-  state.players.forEach((p, i) => {
-    const angle = (360 / n) * i - 90;
+  const seats = orderSeatsAroundYou();
+  const n = seats.length;
+  const startAngle = state.isSpectator || !state.playerId ? -90 : 90;
+
+  seats.forEach((p, i) => {
+    const angle = (360 / n) * i + startAngle;
     const rad = (angle * Math.PI) / 180;
     const x = 50 + 42 * Math.cos(rad);
     const y = 50 + 42 * Math.sin(rad);
 
     const seat = document.createElement('div');
     seat.className = 'table-seat';
-    if (p.id === state.currentPlayerId) seat.classList.add('current-turn');
+    if (p.id === state.playerId) seat.classList.add('you');
+    if (p.id === state.currentPlayerId && !state.revealing) seat.classList.add('current-turn');
     if (!p.connected) seat.classList.add('disconnected');
+    if (state.revealing && state.lastReveal && state.lastReveal.discardedPlayerIds.includes(p.id)) {
+      seat.classList.add('discarded');
+    }
     seat.style.left = `${x}%`;
     seat.style.top = `${y}%`;
 
     const dice = document.createElement('div');
     dice.className = 'seat-dice';
-    dice.textContent = '🎲'.repeat(p.diceCount);
+    const revealedDice = state.revealing && state.lastReveal && state.lastReveal.allDice[p.id];
+    dice.textContent = revealedDice
+      ? revealedDice.map((d) => DIE_FACES[d]).join('')
+      : '🎲'.repeat(p.diceCount);
 
     const name = document.createElement('div');
     name.className = 'seat-name';
-    name.textContent = p.name + (p.isHost ? ' (host)' : '');
+    name.textContent = p.name + (p.isHost ? ' (host)' : '') + (p.id === state.playerId ? ' (you)' : '');
 
     seat.appendChild(dice);
     seat.appendChild(name);
-    els.spectatorTable.appendChild(seat);
+    els.gameTable.appendChild(seat);
   });
-}
-
-function renderPlayerStrip() {
-  els.playerStrip.innerHTML = '';
-  for (const p of state.players) {
-    const chip = document.createElement('div');
-    chip.className = 'player-chip';
-    if (p.id === state.currentPlayerId) chip.classList.add('current-turn');
-    if (!p.connected) chip.classList.add('disconnected');
-    chip.innerHTML = `<span class="conn-dot"></span> ${p.name} — ${p.diceCount} 🎲`;
-    els.playerStrip.appendChild(chip);
-  }
-  renderSpectatorTable();
-}
-
-function renderBid() {
-  if (!state.currentBid) {
-    els.currentBidText.textContent = 'No bid yet — opening round';
-  } else {
-    const b = state.currentBid;
-    const bidder = state.players.find((p) => p.id === b.playerId);
-    els.currentBidText.textContent = `${b.quantity} × ${DIE_FACES[b.face]} (by ${bidder ? bidder.name : '?'})`;
-  }
 }
 
 function renderYourDice() {
@@ -207,11 +257,9 @@ function isLegalBidClient(prevBid, newBid) {
 }
 
 function renderTurnAndControls() {
-  const isYourTurn = !state.isSpectator && state.currentPlayerId === state.playerId;
-  els.turnBanner.hidden = !isYourTurn;
-  if (isYourTurn) els.turnBanner.textContent = "It's your turn!";
+  const isYourTurn = !state.isSpectator && !state.revealing && state.currentPlayerId === state.playerId;
 
-  els.bidControls.hidden = state.isSpectator || state.phase !== 'playing';
+  els.bidControls.hidden = state.isSpectator || state.phase !== 'playing' || state.revealing;
   els.placeBidBtn.disabled = !isYourTurn;
   els.challengeBtn.disabled = !isYourTurn || !state.currentBid;
 
@@ -220,7 +268,7 @@ function renderTurnAndControls() {
   const legal = isLegalBidClient(state.currentBid, { quantity, face });
   els.placeBidBtn.disabled = !isYourTurn || !legal;
 
-  renderSpectatorTable();
+  renderGameTable();
 }
 
 function showJoinError(msg) {
@@ -234,46 +282,12 @@ function showGameError(msg) {
   setTimeout(() => { els.gameError.hidden = true; }, 3000);
 }
 
-function showReveal(payload) {
-  const bidder = state.players.find((p) => p.id === payload.bidderId);
-  const challenger = state.players.find((p) => p.id === payload.challengerId);
-  const bidText = `${payload.bid.quantity} × ${DIE_FACES[payload.bid.face]}`;
-
-  els.revealTitle.textContent = payload.challengerWasRight
-    ? `${bidder ? bidder.name : '?'} was bluffing!`
-    : `${bidder ? bidder.name : '?'} told the truth!`;
-
-  els.revealDice.innerHTML = '';
-  for (const [playerId, dice] of Object.entries(payload.allDice)) {
-    const p = state.players.find((pl) => pl.id === playerId);
-    const group = document.createElement('div');
-    group.className = 'die-group';
-    const label = document.createElement('div');
-    label.className = 'die-group-name';
-    label.textContent = p ? p.name : playerId;
-    group.appendChild(label);
-    const row = document.createElement('div');
-    row.className = 'dice-row';
-    for (const d of dice) {
-      const die = document.createElement('div');
-      die.className = 'die';
-      die.textContent = DIE_FACES[d];
-      row.appendChild(die);
-    }
-    group.appendChild(row);
-    els.revealDice.appendChild(group);
-  }
-
-  const discardedNames = payload.discardedPlayerIds
-    .map((id) => (state.players.find((p) => p.id === id) || {}).name || id)
-    .join(', ');
-
-  els.revealDetail.textContent =
-    `Claimed ${bidText}; actual count was ${payload.actualCount}. ` +
-    `${challenger ? challenger.name : '?'} ${payload.challengerWasRight ? 'was right' : 'was wrong'} to challenge. ` +
-    `${discardedNames} discard${payload.discardedPlayerIds.length === 1 ? 's' : ''} a die.`;
-
-  els.revealOverlay.hidden = false;
+function applyGameOver(payload) {
+  setPhase('gameover');
+  const names = payload.winnerNames.filter(Boolean);
+  els.gameoverText.textContent = names.length > 1
+    ? `${names.join(' and ')} reached zero dice at the same time — joint winners!`
+    : `${names[0] || 'A player'} reached zero dice and wins!`;
 }
 
 // ---------- Message handlers ----------
@@ -324,8 +338,6 @@ const MESSAGE_HANDLERS = {
       renderLobby();
     } else if (payload.phase === 'playing') {
       setPhase('playing');
-      renderPlayerStrip();
-      renderBid();
       renderTurnAndControls();
     } else if (payload.phase === 'gameover') {
       setPhase('gameover');
@@ -355,8 +367,6 @@ const MESSAGE_HANDLERS = {
     }
     state.currentBid = null;
     setPhase('playing');
-    renderPlayerStrip();
-    renderBid();
     renderTurnAndControls();
   },
 
@@ -368,7 +378,6 @@ const MESSAGE_HANDLERS = {
   bid_placed(payload) {
     state.currentBid = { quantity: payload.quantity, face: payload.face, playerId: payload.playerId };
     state.currentPlayerId = payload.nextPlayerId;
-    renderBid();
     renderTurnAndControls();
   },
 
@@ -380,44 +389,40 @@ const MESSAGE_HANDLERS = {
     for (const p of state.players) {
       if (payload.diceCounts[p.id] !== undefined) p.diceCount = payload.diceCounts[p.id];
     }
-    renderPlayerStrip();
-    showReveal(payload);
+    state.lastReveal = payload;
+    state.revealing = true;
+    renderTurnAndControls();
   },
 
   round_started(payload) {
-    // Note: deliberately does NOT hide the reveal overlay — challenge_result and
-    // round_started arrive back-to-back, and the player needs the "Continue"
-    // button click to be what dismisses the reveal, or they'd never see it.
+    // Table state updates now, but rendering stays on the reveal (set by
+    // challenge_result just above) until dismissReveal() runs — otherwise the
+    // reveal would be replaced before the player ever saw it.
     state.currentBid = null;
     state.currentPlayerId = payload.currentPlayerId;
     for (const p of state.players) {
       if (payload.diceCounts[p.id] !== undefined) p.diceCount = payload.diceCounts[p.id];
     }
-    renderPlayerStrip();
-    renderBid();
     renderTurnAndControls();
   },
 
   player_disconnected(payload) {
     const p = state.players.find((pl) => pl.id === payload.playerId);
     if (p) p.connected = false;
-    if (state.phase === 'lobby') renderLobby(); else renderPlayerStrip();
+    if (state.phase === 'lobby') renderLobby(); else renderGameTable();
   },
 
   player_reconnected(payload) {
     const p = state.players.find((pl) => pl.id === payload.playerId);
     if (p) p.connected = true;
-    if (state.phase === 'lobby') renderLobby(); else renderPlayerStrip();
+    if (state.phase === 'lobby') renderLobby(); else renderGameTable();
   },
 
   game_over(payload) {
-    // Leave the reveal overlay (if open) up — the player dismisses it with
-    // "Continue" and sees the game-over screen underneath.
-    setPhase('gameover');
-    const names = payload.winnerNames.filter(Boolean);
-    els.gameoverText.textContent = names.length > 1
-      ? `${names.join(' and ')} reached zero dice at the same time — joint winners!`
-      : `${names[0] || 'A player'} reached zero dice and wins!`;
+    // If a reveal is still showing, queue this and let dismissReveal() apply it
+    // once the player clicks "Continue" — otherwise the final reveal is never seen.
+    state.pendingGameOver = payload;
+    if (!state.revealing) applyGameOver(payload);
     clearSession();
   },
 
@@ -436,17 +441,14 @@ const els = {
   spectateBtn: document.getElementById('spectate-btn'),
   joinError: document.getElementById('join-error'),
   spectatorCountDisplay: document.getElementById('spectator-count-display'),
-  spectatorTable: document.getElementById('spectator-table'),
 
   lobbyRoomCode: document.getElementById('lobby-room-code'),
   lobbyPlayerList: document.getElementById('lobby-player-list'),
   startGameBtn: document.getElementById('start-game-btn'),
   lobbyWaitingText: document.getElementById('lobby-waiting-text'),
 
-  playerStrip: document.getElementById('player-strip'),
-  currentBidText: document.getElementById('current-bid-text'),
+  gameTable: document.getElementById('game-table'),
   yourDiceRow: document.getElementById('your-dice'),
-  turnBanner: document.getElementById('turn-banner'),
   bidControls: document.getElementById('bid-controls'),
   bidQuantity: document.getElementById('bid-quantity'),
   bidFace: document.getElementById('bid-face'),
@@ -457,12 +459,6 @@ const els = {
   gameoverTitle: document.getElementById('gameover-title'),
   gameoverText: document.getElementById('gameover-text'),
   playAgainBtn: document.getElementById('play-again-btn'),
-
-  revealOverlay: document.getElementById('reveal-overlay'),
-  revealTitle: document.getElementById('reveal-title'),
-  revealDice: document.getElementById('reveal-dice'),
-  revealDetail: document.getElementById('reveal-detail'),
-  revealContinueBtn: document.getElementById('reveal-continue-btn'),
 };
 
 els.createRoomBtn.addEventListener('click', () => {
@@ -494,10 +490,6 @@ els.challengeBtn.addEventListener('click', () => {
 
 els.bidQuantity.addEventListener('input', renderTurnAndControls);
 els.bidFace.addEventListener('change', renderTurnAndControls);
-
-els.revealContinueBtn.addEventListener('click', () => {
-  els.revealOverlay.hidden = true;
-});
 
 els.playAgainBtn.addEventListener('click', () => {
   location.reload();

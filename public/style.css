@@ -125,74 +125,19 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   align-items: center;
 }
 
-.player-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.player-chip {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 0.4rem 0.8rem;
-  font-size: 0.85rem;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.player-chip.current-turn {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
-}
-
-.player-chip .conn-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--good);
-  display: inline-block;
-}
-
-.player-chip.disconnected .conn-dot { background: var(--text-dim); }
-
-.bid-readout {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1rem;
-  text-align: center;
-  margin-bottom: 1rem;
-}
-
-#current-bid-text {
-  font-size: 1.4rem;
-  font-weight: 700;
-  margin-top: 0.25rem;
-}
-
 .your-dice { margin-bottom: 1rem; }
 
 body[data-role="spectator"] .your-dice,
-body[data-role="spectator"] #bid-controls,
-body[data-role="spectator"] .bid-readout,
-body[data-role="spectator"] .player-strip {
+body[data-role="spectator"] #bid-controls {
   display: none;
 }
 
-.spectator-table {
-  display: none;
+.game-table {
   position: relative;
   width: 100%;
   max-width: 420px;
   aspect-ratio: 1 / 1;
   margin: 0 auto 1.25rem;
-}
-
-body[data-role="spectator"] .spectator-table {
-  display: block;
 }
 
 .table-surface {
@@ -211,6 +156,7 @@ body[data-role="spectator"] .spectator-table {
 .table-center {
   text-align: center;
   color: #eef1f5;
+  max-width: 80%;
 }
 
 .table-bid-text {
@@ -222,6 +168,29 @@ body[data-role="spectator"] .spectator-table {
 .table-turn-text {
   font-size: 0.75rem;
   color: #b9d6c4;
+}
+
+.table-turn-text.your-turn {
+  color: #fff;
+  font-weight: 700;
+}
+
+.table-reveal-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.table-reveal-detail {
+  font-size: 0.72rem;
+  color: #d7e6dc;
+  line-height: 1.35;
+  margin-bottom: 0.6rem;
+}
+
+.table-continue-btn {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
 }
 
 .table-seat {
@@ -243,6 +212,15 @@ body[data-role="spectator"] .spectator-table {
   box-shadow: 0 0 0 2px var(--accent);
 }
 
+.table-seat.you {
+  border-color: #b9d6c4;
+}
+
+.table-seat.discarded {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 2px var(--danger);
+}
+
 .table-seat.disconnected {
   opacity: 0.5;
 }
@@ -261,12 +239,13 @@ body[data-role="spectator"] .spectator-table {
   max-width: 90px;
 }
 
-.table-seat.current-turn .seat-name {
+.table-seat.current-turn .seat-name,
+.table-seat.you .seat-name {
   color: var(--text);
   font-weight: 600;
 }
 
-.dice-row, .reveal-dice {
+.dice-row {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
@@ -282,16 +261,6 @@ body[data-role="spectator"] .spectator-table {
   padding: 0.3rem 0.5rem;
 }
 
-.turn-banner {
-  background: var(--accent);
-  color: white;
-  text-align: center;
-  padding: 0.6rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  font-weight: 600;
-}
-
 .bid-controls {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -303,39 +272,6 @@ body[data-role="spectator"] .spectator-table {
 }
 
 .bid-controls button { grid-column: span 1; }
-
-.overlay[hidden] {
-  display: none;
-}
-
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
-
-.overlay-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1.5rem;
-  max-width: 440px;
-  width: 100%;
-}
-
-.reveal-dice .die-group {
-  margin-bottom: 0.75rem;
-}
-
-.reveal-dice .die-group-name {
-  font-size: 0.85rem;
-  color: var(--text-dim);
-  margin-bottom: 0.3rem;
-}
 
 #gameover-title { text-align: center; }
 #gameover-text { text-align: center; color: var(--text-dim); }
