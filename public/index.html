@@ -57,21 +57,14 @@
       </div>
 
       <div id="bid-controls" class="bid-controls" hidden>
-        <label>
-          Quantity
-          <input id="bid-quantity" type="number" min="1" value="1">
-        </label>
-        <label>
-          Face
-          <select id="bid-face">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-          </select>
-        </label>
+        <div class="bid-field">
+          <span class="hint">Face</span>
+          <div id="face-picker" class="face-picker"></div>
+        </div>
+        <div class="bid-field">
+          <span class="hint">Number of dice</span>
+          <select id="bid-quantity"></select>
+        </div>
         <button id="place-bid-btn" class="primary">Bid</button>
         <button id="challenge-btn" class="danger" disabled>Call cheat!</button>
       </div>

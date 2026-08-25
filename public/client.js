@@ -2,6 +2,8 @@
 
 const DIE_FACES = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
 
+let selectedFace = 1;
+
 const state = {
   ws: null,
   roomCode: null,
@@ -264,6 +266,36 @@ function isLegalBidClient(prevBid, newBid) {
   return false;
 }
 
+function renderFacePicker() {
+  els.facePicker.innerHTML = '';
+  for (let face = 1; face <= 6; face++) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'face-option';
+    if (face === selectedFace) btn.classList.add('selected');
+    btn.textContent = DIE_FACES[face];
+    btn.addEventListener('click', () => {
+      selectedFace = face;
+      renderFacePicker();
+      renderTurnAndControls();
+    });
+    els.facePicker.appendChild(btn);
+  }
+}
+
+function renderBidQuantityOptions() {
+  const totalDice = state.players.reduce((sum, p) => sum + p.diceCount, 0) || 1;
+  const prevValue = Number(els.bidQuantity.value) || 1;
+  els.bidQuantity.innerHTML = '';
+  for (let q = 1; q <= totalDice; q++) {
+    const opt = document.createElement('option');
+    opt.value = String(q);
+    opt.textContent = String(q);
+    els.bidQuantity.appendChild(opt);
+  }
+  els.bidQuantity.value = String(Math.min(prevValue, totalDice));
+}
+
 function renderTurnAndControls() {
   const isYourTurn = !state.isSpectator && !state.revealing && state.currentPlayerId === state.playerId;
 
@@ -271,9 +303,10 @@ function renderTurnAndControls() {
   els.placeBidBtn.disabled = !isYourTurn;
   els.challengeBtn.disabled = !isYourTurn || !state.currentBid;
 
+  renderBidQuantityOptions();
+
   const quantity = Number(els.bidQuantity.value);
-  const face = Number(els.bidFace.value);
-  const legal = isLegalBidClient(state.currentBid, { quantity, face });
+  const legal = isLegalBidClient(state.currentBid, { quantity, face: selectedFace });
   els.placeBidBtn.disabled = !isYourTurn || !legal;
 
   renderGameTable();
@@ -459,7 +492,7 @@ const els = {
   yourDiceRow: document.getElementById('your-dice'),
   bidControls: document.getElementById('bid-controls'),
   bidQuantity: document.getElementById('bid-quantity'),
-  bidFace: document.getElementById('bid-face'),
+  facePicker: document.getElementById('face-picker'),
   placeBidBtn: document.getElementById('place-bid-btn'),
   challengeBtn: document.getElementById('challenge-btn'),
   gameError: document.getElementById('game-error'),
@@ -489,18 +522,18 @@ els.startGameBtn.addEventListener('click', () => {
 });
 
 els.placeBidBtn.addEventListener('click', () => {
-  send('place_bid', { quantity: Number(els.bidQuantity.value), face: Number(els.bidFace.value) });
+  send('place_bid', { quantity: Number(els.bidQuantity.value), face: selectedFace });
 });
 
 els.challengeBtn.addEventListener('click', () => {
   send('challenge', {});
 });
 
-els.bidQuantity.addEventListener('input', renderTurnAndControls);
-els.bidFace.addEventListener('change', renderTurnAndControls);
+els.bidQuantity.addEventListener('change', renderTurnAndControls);
 
 els.playAgainBtn.addEventListener('click', () => {
   location.reload();
 });
 
+renderFacePicker();
 connect();

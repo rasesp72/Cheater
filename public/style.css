@@ -289,5 +289,39 @@ body[data-role="spectator"] #bid-controls {
 
 .bid-controls button { grid-column: span 1; }
 
+.bid-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.face-picker {
+  display: flex;
+  gap: 0.3rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.3rem;
+}
+
+.face-option {
+  flex: 1;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0.25rem 0;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.face-option:hover {
+  background: var(--surface);
+}
+
+.face-option.selected {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
 #gameover-title { text-align: center; }
 #gameover-text { text-align: center; color: var(--text-dim); }
