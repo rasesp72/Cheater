@@ -210,6 +210,8 @@ function renderGameTable() {
     const x = 50 + 42 * Math.cos(rad);
     const y = 50 + 42 * Math.sin(rad);
 
+    const revealedDice = state.revealing && state.lastReveal && state.lastReveal.allDice[p.id];
+
     const seat = document.createElement('div');
     seat.className = 'table-seat';
     if (p.id === state.playerId) seat.classList.add('you');
@@ -218,12 +220,12 @@ function renderGameTable() {
     if (state.revealing && state.lastReveal && state.lastReveal.discardedPlayerIds.includes(p.id)) {
       seat.classList.add('discarded');
     }
+    if (revealedDice) seat.classList.add('revealed');
     seat.style.left = `${x}%`;
     seat.style.top = `${y}%`;
 
     const dice = document.createElement('div');
-    dice.className = 'seat-dice';
-    const revealedDice = state.revealing && state.lastReveal && state.lastReveal.allDice[p.id];
+    dice.className = revealedDice ? 'seat-dice revealed' : 'seat-dice';
     dice.textContent = revealedDice
       ? revealedDice.map((d) => DIE_FACES[d]).join('')
       : '🎲'.repeat(p.diceCount);

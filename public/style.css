@@ -207,6 +207,10 @@ body[data-role="spectator"] #bid-controls {
   max-width: 100px;
 }
 
+.table-seat.revealed {
+  max-width: 132px;
+}
+
 .table-seat.current-turn {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--accent);
@@ -228,6 +232,12 @@ body[data-role="spectator"] #bid-controls {
 .seat-dice {
   font-size: 0.85rem;
   letter-spacing: -2px;
+}
+
+.seat-dice.revealed {
+  font-size: 1.8rem;
+  letter-spacing: 1px;
+  text-align: center;
 }
 
 .seat-name {
