@@ -1,0 +1,13 @@
+{
+  "name": "cheater",
+  "version": "1.0.0",
+  "description": "Multiplayer browser implementation of the Danish bluffing dice game Lyv/Taenkeboks",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cheater</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-phase="join">
+
+  <header class="app-header">
+    <h1>Cheater</h1>
+    <p class="subtitle">Bid or bluff. First to zero dice wins.</p>
+    <p id="spectator-count-display" class="hint" hidden></p>
+  </header>
+
+  <main>
+    <!-- JOIN / CREATE -->
+    <section id="view-join" class="view">
+      <label>
+        Your name
+        <input id="name-input" type="text" maxlength="24" placeholder="Your name" autocomplete="off">
+      </label>
+
+      <div class="join-actions">
+        <button id="create-room-btn" class="primary">Create room</button>
+
+        <div class="divider">or</div>
+
+        <label>
+          Room code
+          <input id="room-code-input" type="text" maxlength="4" placeholder="ABCD" autocomplete="off" style="text-transform:uppercase">
+        </label>
+        <button id="join-room-btn">Join room</button>
+        <button id="spectate-btn">Watch as spectator</button>
+      </div>
+
+      <p id="join-error" class="error-text" hidden></p>
+    </section>
+
+    <!-- LOBBY -->
+    <section id="view-lobby" class="view">
+      <h2>Room <span id="lobby-room-code"></span></h2>
+      <p class="hint">Share this code with other players.</p>
+      <ul id="lobby-player-list" class="player-list"></ul>
+      <button id="start-game-btn" class="primary" hidden>Start game</button>
+      <p id="lobby-waiting-text" class="hint">Waiting for the host to start&hellip;</p>
+    </section>
+
+    <!-- GAME -->
+    <section id="view-game" class="view">
+      <div id="player-strip" class="player-strip"></div>
+      <div id="spectator-table" class="spectator-table"></div>
+
+      <div class="bid-readout">
+        <span class="hint">Current bid</span>
+        <div id="current-bid-text">No bid yet</div>
+      </div>
+
+      <div class="your-dice">
+        <span class="hint">Your dice</span>
+        <div id="your-dice" class="dice-row"></div>
+      </div>
+
+      <div id="turn-banner" class="turn-banner" hidden></div>
+
+      <div id="bid-controls" class="bid-controls" hidden>
+        <label>
+          Quantity
+          <input id="bid-quantity" type="number" min="1" value="1">
+        </label>
+        <label>
+          Face
+          <select id="bid-face">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+          </select>
+        </label>
+        <button id="place-bid-btn" class="primary">Bid</button>
+        <button id="challenge-btn" class="danger" disabled>Call cheat!</button>
+      </div>
+
+      <p id="game-error" class="error-text" hidden></p>
+    </section>
+
+    <!-- GAME OVER -->
+    <section id="view-gameover" class="view">
+      <h2 id="gameover-title">Game over</h2>
+      <p id="gameover-text"></p>
+      <button id="play-again-btn" class="primary">Reload &amp; play again</button>
+    </section>
+  </main>
+
+  <!-- REVEAL OVERLAY -->
+  <div id="reveal-overlay" class="overlay" hidden>
+    <div class="overlay-card">
+      <h3 id="reveal-title"></h3>
+      <div id="reveal-dice" class="reveal-dice"></div>
+      <p id="reveal-detail"></p>
+      <button id="reveal-continue-btn" class="primary">Continue</button>
+    </div>
+  </div>
+
+  <script src="client.js"></script>
+</body>
+</html>
