@@ -122,9 +122,15 @@ function renderBidCenter(center) {
 
   const bidValue = document.createElement('div');
   bidValue.className = 'table-bid-text';
-  bidValue.textContent = state.currentBid
-    ? `${state.currentBid.quantity} × ${DIE_FACES[state.currentBid.face]}`
-    : 'No bid yet';
+  if (state.currentBid) {
+    bidValue.append(`${state.currentBid.quantity} × `);
+    const dieSpan = document.createElement('span');
+    dieSpan.className = 'table-bid-die';
+    dieSpan.textContent = DIE_FACES[state.currentBid.face];
+    bidValue.appendChild(dieSpan);
+  } else {
+    bidValue.textContent = 'No bid yet';
+  }
 
   center.appendChild(bidLabel);
   center.appendChild(bidValue);

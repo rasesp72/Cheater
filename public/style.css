@@ -165,6 +165,12 @@ body[data-role="spectator"] #bid-controls {
   margin: 0.15rem 0 0.4rem;
 }
 
+.table-bid-die {
+  font-size: 2rem;
+  vertical-align: middle;
+  line-height: 1;
+}
+
 .table-turn-text {
   font-size: 0.75rem;
   color: #b9d6c4;
