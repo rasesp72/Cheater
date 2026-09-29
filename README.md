@@ -21,7 +21,8 @@ their dice wins**.
     the challenger was wrong, and **everyone except the wrong challenger**
     discards one die.
   - If the actual count is **less than** the bid, the bidder lied — the
-    challenger was right, and **only the challenger** discards one die.
+    challenger was right, and **everyone except the lying bidder**
+    discards one die.
 - Whoever was proven wrong (the caught liar, or the wrongful challenger)
   makes the first bid of the next round.
 - The moment any player reaches **0 dice**, the game ends and they win. If

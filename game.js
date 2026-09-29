@@ -74,7 +74,7 @@ function resolveChallenge(bid, challengerId, allPlayersDice) {
   const challengerWasRight = actualCount < bid.quantity;
 
   const discardIds = challengerWasRight
-    ? [challengerId]
+    ? Object.keys(allPlayersDice).filter((id) => id !== bid.playerId)
     : Object.keys(allPlayersDice).filter((id) => id !== challengerId);
 
   const nextRoundStarterId = challengerWasRight ? bid.playerId : challengerId;

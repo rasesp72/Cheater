@@ -78,6 +78,17 @@ test('resolveChallenge: challenger right when actual count is below the bid', ()
   assert.equal(result.nextRoundStarterId, 'bidder');
 });
 
+test('resolveChallenge: everyone but the cheating bidder discards, in a 3-player room', () => {
+  const bid = { quantity: 5, face: 5, playerId: 'p1' };
+  const dice = { p1: [5, 5, 1, 3], p2: [2, 3, 4, 6], p3: [1, 2, 3, 4] };
+  // actual 5s = 2, wild 1s = 2 -> total 4 < 5, challenger right
+  const result = resolveChallenge(bid, 'p2', dice);
+  assert.equal(result.actualCount, 4);
+  assert.equal(result.challengerWasRight, true);
+  assert.deepEqual(result.discardIds.sort(), ['p2', 'p3'].sort());
+  assert.equal(result.nextRoundStarterId, 'p1');
+});
+
 test('resolveChallenge: everyone but the wrong challenger discards, in a 3-player room', () => {
   const bid = { quantity: 2, face: 6, playerId: 'p1' };
   const dice = { p1: [6, 6], p2: [1, 2], p3: [3, 4] }; // actual 6s = 2 -> bid holds
